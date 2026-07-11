@@ -208,7 +208,7 @@ export default function ReviewList() {
         }
 
         // Create misspelled versions
-        const misspellings = generateMisspellings(word);
+        const misspellings = generatePhoneticMisspellings(word);
         const allOptions = [word, ...misspellings].sort(() => Math.random() - 0.5);
 
         pdf.setFontSize(11);
@@ -231,89 +231,134 @@ export default function ReviewList() {
     pdf.save('select-spelling-worksheet.pdf');
   };
 
-  // Helper function to generate common misspellings (structural and phonetic)
-  const generateMisspellings = (word: string): string[] => {
+  // Helper function to generate phonologically plausible misspellings
+  const generatePhoneticMisspellings = (word: string): string[] => {
     const misspellings = new Set<string>();
+    const lowerWord = word.toLowerCase();
 
-    // Common misspelling: swap two letters
-    if (word.length > 2) {
-      const randomIndex = Math.floor(Math.random() * (word.length - 1));
-      misspellings.add(
-        word.slice(0, randomIndex) +
-          word[randomIndex + 1] +
-          word[randomIndex] +
-          word.slice(randomIndex + 2)
-      );
-    }
-
-    // Common misspelling: double a letter
-    const randomIndex2 = Math.floor(Math.random() * word.length);
-    misspellings.add(
-      word.slice(0, randomIndex2) + word[randomIndex2] + word.slice(randomIndex2)
-    );
-
-    // Common misspelling: remove a letter
-    if (word.length > 2) {
-      const randomIndex3 = Math.floor(Math.random() * word.length);
-      misspellings.add(word.slice(0, randomIndex3) + word.slice(randomIndex3 + 1));
-    }
-
-    // Phonetic misspellings - common vowel substitutions
+    // Vowel substitutions (phonetically similar sounds)
     const vowelMap: { [key: string]: string[] } = {
-      a: ['e', 'o', 'ai'],
-      e: ['a', 'i', 'ea'],
-      i: ['y', 'ie', 'e'],
-      o: ['u', 'oo', 'a'],
-      u: ['o', 'oo', 'ou'],
+      a: ['ay', 'ae', 'ai'],
+      e: ['ea', 'ee', 'ie'],
+      i: ['ie', 'y', 'igh'],
+      o: ['oa', 'oe', 'ow'],
+      u: ['oo', 'ou', 'ew'],
     };
 
-    // Replace one vowel with a phonetically similar vowel
-    for (let i = 0; i < word.length; i++) {
-      const char = word[i].toLowerCase();
-      if (vowelMap[char]) {
+    // Generate vowel-based misspellings
+    for (let i = 0; i < lowerWord.length; i++) {
+      const char = lowerWord[i].toLowerCase();
+      if (vowelMap[char] && Math.random() > 0.5) {
         const alternatives = vowelMap[char];
         const randomAlt = alternatives[Math.floor(Math.random() * alternatives.length)];
-        misspellings.add(word.slice(0, i) + randomAlt + word.slice(i + 1));
+        const newWord = lowerWord.slice(0, i) + randomAlt + lowerWord.slice(i + 1);
+        misspellings.add(newWord);
       }
     }
 
-    // Common consonant substitutions for similar sounds
+    // Consonant substitutions (phonetically similar sounds)
     const consonantMap: { [key: string]: string[] } = {
-      c: ['k', 's'],
-      k: ['c'],
-      s: ['c', 'z'],
-      z: ['s'],
-      f: ['ph', 'v'],
-      v: ['f'],
-      j: ['g', 'dg'],
-      g: ['j'],
+      c: ['k', 'ck', 'ch'],
+      k: ['c', 'ck'],
+      s: ['z', 'ss', 'c'],
+      z: ['s', 'ss'],
+      f: ['ph', 'ff', 'v'],
+      v: ['f', 'ph'],
+      j: ['g', 'dge'],
+      g: ['j', 'dge'],
+      ch: ['tch'],
+      sh: ['ch'],
+      th: ['f'],
+      ph: ['f', 'v'],
+      ck: ['c', 'k'],
     };
 
-    // Replace one consonant with a phonetically similar consonant
-    for (let i = 0; i < word.length; i++) {
-      const char = word[i].toLowerCase();
-      if (consonantMap[char]) {
-        const alternatives = consonantMap[char];
-        const randomAlt = alternatives[Math.floor(Math.random() * alternatives.length)];
-        misspellings.add(word.slice(0, i) + randomAlt + word.slice(i + 1));
+    // Generate consonant-based misspellings
+    for (const [key, alts] of Object.entries(consonantMap)) {
+      if (lowerWord.includes(key) && Math.random() > 0.5) {
+        const idx = lowerWord.indexOf(key);
+        const randomAlt = alts[Math.floor(Math.random() * alts.length)];
+        const newWord = lowerWord.slice(0, idx) + randomAlt + lowerWord.slice(idx + key.length);
+        misspellings.add(newWord);
       }
     }
 
-    // Convert Set to Array and limit to 3 misspellings (to keep options reasonable)
-    const misspellingArray = Array.from(misspellings).slice(0, 3);
-    
-    // If we don't have enough, add more structural mistakes
-    while (misspellingArray.length < 3) {
-      if (word.length > 1) {
-        const randomIndex4 = Math.floor(Math.random() * word.length);
-        const newMisspelling = word.slice(0, randomIndex4) + 'x' + word.slice(randomIndex4 + 1);
-        if (newMisspelling !== word && !misspellingArray.includes(newMisspelling)) {
-          misspellingArray.push(newMisspelling);
+    // Common phonetic patterns (silent letters, doubled letters, etc.)
+    const phoneticPatterns: { [key: string]: string[] } = {
+      // Silent letters
+      'night': ['nite', 'nght'],
+      'write': ['rite', 'writ'],
+      'know': ['no', 'noe'],
+      // Doubled consonants
+      'double': 'dubble',
+      'letter': 'leter',
+    };
+
+    // Silent letter handling
+    if (lowerWord.includes('gh')) {
+      misspellings.add(lowerWord.replace('gh', 'h'));
+    }
+    if (lowerWord.includes('ght')) {
+      misspellings.add(lowerWord.replace('ght', 't'));
+    }
+    if (lowerWord.includes('kn')) {
+      misspellings.add(lowerWord.replace('kn', 'n'));
+    }
+    if (lowerWord.includes('wr')) {
+      misspellings.add(lowerWord.replace('wr', 'r'));
+    }
+
+    // Double consonants for short vowels
+    for (let i = 1; i < lowerWord.length - 1; i++) {
+      if ('aeiou'.includes(lowerWord[i]) && 'bcdfghjklmnpqrstvwxyz'.includes(lowerWord[i + 1])) {
+        if (Math.random() > 0.7) {
+          misspellings.add(
+            lowerWord.slice(0, i + 1) + lowerWord[i + 1] + lowerWord.slice(i + 1)
+          );
         }
       }
     }
 
-    return misspellingArray;
+    // Convert Set to Array and limit to 3 misspellings
+    let misspellingArray = Array.from(misspellings)
+      .filter((m) => m !== lowerWord && m.length > 0)
+      .slice(0, 3);
+
+    // If we don't have enough phonetically plausible ones, generate more
+    while (misspellingArray.length < 3) {
+      // Common spelling pattern errors
+      const patternErrors = [
+        lowerWord.replace(/ing$/, 'in'),
+        lowerWord.replace(/ed$/, 'ed'),
+        lowerWord.replace(/ly$/, 'le'),
+        lowerWord.replace(/tion$/, 'shun'),
+        lowerWord.replace(/sion$/, 'shun'),
+      ];
+
+      for (const error of patternErrors) {
+        if (error !== lowerWord && !misspellingArray.includes(error) && error.length > 0) {
+          misspellingArray.push(error);
+          if (misspellingArray.length >= 3) break;
+        }
+      }
+
+      // If still not enough, add vowel swaps
+      if (misspellingArray.length < 3) {
+        const vowels = 'aeiou';
+        const randomPos = Math.floor(Math.random() * lowerWord.length);
+        if ('aeiou'.includes(lowerWord[randomPos])) {
+          const randomVowel = vowels[Math.floor(Math.random() * vowels.length)];
+          const newWord = lowerWord.slice(0, randomPos) + randomVowel + lowerWord.slice(randomPos + 1);
+          if (newWord !== lowerWord && !misspellingArray.includes(newWord)) {
+            misspellingArray.push(newWord);
+          }
+        }
+      }
+
+      break;
+    }
+
+    return misspellingArray.slice(0, 3);
   };
 
   const handleGenerateWorksheets = async () => {
