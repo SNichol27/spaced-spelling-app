@@ -212,8 +212,14 @@ export default function ReviewList() {
         const allOptions = [word, ...misspellings].sort(() => Math.random() - 0.5);
 
         pdf.setFontSize(11);
-        pdf.text(`${index + 1}. ${allOptions.join('   /   ')}`, 20, yPosition);
-        yPosition += 10;
+        // Format options with line breaks if needed
+        const optionsText = allOptions.join('     ');
+        const wrappedOptions = pdf.splitTextToSize(optionsText, 160);
+        
+        pdf.text(`${index + 1}.`, 20, yPosition);
+        pdf.text(wrappedOptions, 25, yPosition + 5);
+        
+        yPosition += wrappedOptions.length * 5 + 8;
       }
     });
 
