@@ -226,14 +226,14 @@ export default function ReviewList() {
     pdf.save('select-spelling-worksheet.pdf');
   };
 
-  // Helper function to generate common misspellings
+  // Helper function to generate common misspellings (structural and phonetic)
   const generateMisspellings = (word: string): string[] => {
-    const misspellings = [];
+    const misspellings = new Set<string>();
 
     // Common misspelling: swap two letters
     if (word.length > 2) {
       const randomIndex = Math.floor(Math.random() * (word.length - 1));
-      misspellings.push(
+      misspellings.add(
         word.slice(0, randomIndex) +
           word[randomIndex + 1] +
           word[randomIndex] +
@@ -243,17 +243,72 @@ export default function ReviewList() {
 
     // Common misspelling: double a letter
     const randomIndex2 = Math.floor(Math.random() * word.length);
-    misspellings.push(
+    misspellings.add(
       word.slice(0, randomIndex2) + word[randomIndex2] + word.slice(randomIndex2)
     );
 
     // Common misspelling: remove a letter
     if (word.length > 2) {
       const randomIndex3 = Math.floor(Math.random() * word.length);
-      misspellings.push(word.slice(0, randomIndex3) + word.slice(randomIndex3 + 1));
+      misspellings.add(word.slice(0, randomIndex3) + word.slice(randomIndex3 + 1));
     }
 
-    return misspellings;
+    // Phonetic misspellings - common vowel substitutions
+    const vowelMap: { [key: string]: string[] } = {
+      a: ['e', 'o', 'ai'],
+      e: ['a', 'i', 'ea'],
+      i: ['y', 'ie', 'e'],
+      o: ['u', 'oo', 'a'],
+      u: ['o', 'oo', 'ou'],
+    };
+
+    // Replace one vowel with a phonetically similar vowel
+    for (let i = 0; i < word.length; i++) {
+      const char = word[i].toLowerCase();
+      if (vowelMap[char]) {
+        const alternatives = vowelMap[char];
+        const randomAlt = alternatives[Math.floor(Math.random() * alternatives.length)];
+        misspellings.add(word.slice(0, i) + randomAlt + word.slice(i + 1));
+      }
+    }
+
+    // Common consonant substitutions for similar sounds
+    const consonantMap: { [key: string]: string[] } = {
+      c: ['k', 's'],
+      k: ['c'],
+      s: ['c', 'z'],
+      z: ['s'],
+      f: ['ph', 'v'],
+      v: ['f'],
+      j: ['g', 'dg'],
+      g: ['j'],
+    };
+
+    // Replace one consonant with a phonetically similar consonant
+    for (let i = 0; i < word.length; i++) {
+      const char = word[i].toLowerCase();
+      if (consonantMap[char]) {
+        const alternatives = consonantMap[char];
+        const randomAlt = alternatives[Math.floor(Math.random() * alternatives.length)];
+        misspellings.add(word.slice(0, i) + randomAlt + word.slice(i + 1));
+      }
+    }
+
+    // Convert Set to Array and limit to 3 misspellings (to keep options reasonable)
+    const misspellingArray = Array.from(misspellings).slice(0, 3);
+    
+    // If we don't have enough, add more structural mistakes
+    while (misspellingArray.length < 3) {
+      if (word.length > 1) {
+        const randomIndex4 = Math.floor(Math.random() * word.length);
+        const newMisspelling = word.slice(0, randomIndex4) + 'x' + word.slice(randomIndex4 + 1);
+        if (newMisspelling !== word && !misspellingArray.includes(newMisspelling)) {
+          misspellingArray.push(newMisspelling);
+        }
+      }
+    }
+
+    return misspellingArray;
   };
 
   const handleGenerateWorksheets = async () => {
