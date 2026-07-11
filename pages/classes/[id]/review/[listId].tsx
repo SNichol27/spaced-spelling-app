@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import type { SpellingList } from '@/lib/types';
+import jsPDF from 'jspdf';
 
 export default function ReviewList() {
   const router = useRouter();
@@ -11,6 +12,7 @@ export default function ReviewList() {
   const [words, setWords] = useState<string[]>([]);
   const [selectedWorksheets, setSelectedWorksheets] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     if (!listId) return;
@@ -51,13 +53,188 @@ export default function ReviewList() {
     }
   };
 
+  // Fetch definition from Free Dictionary API
+  const fetchDefinition = async (word: string): Promise<string> => {
+    try {
+      const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word.toLowerCase()}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data[0] && data[0].meanings && data[0].meanings[0] && data[0].meanings[0].definitions) {
+          return data[0].meanings[0].definitions[0].definition;
+        }
+      }
+    } catch (error) {
+      console.error(`Error fetching definition for ${word}:`, error);
+    }
+    return 'Definition not available';
+  };
+
+  // Generate PDF for Match Words to Definitions worksheet
+  const generateDefinitionsWorksheet = async () => {
+    setGenerating(true);
+    const pdf = new jsPDF();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    let yPosition = 20;
+
+    // Title
+    pdf.setFontSize(18);
+    pdf.text('Match Words to Definitions', pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 15;
+
+    pdf.setFontSize(11);
+    pdf.text('Name: ______________________     Date: ________________', 20, yPosition);
+    yPosition += 15;
+
+    // Fetch definitions for all words
+    const definitions: { [key: string]: string } = {};
+    for (const word of words) {
+      if (word.trim()) {
+        const definition = await fetchDefinition(word);
+        definitions[word] = definition;
+      }
+    }
+
+    // Create shuffled list of definitions for matching
+    const shuffledDefinitions = [...Object.values(definitions)].sort(() => Math.random() - 0.5);
+
+    // Left side - Words
+    pdf.setFontSize(12);
+    pdf.text('Words:', 20, yPosition);
+    yPosition += 8;
+
+    words.forEach((word, index) => {
+      if (word.trim()) {
+        pdf.setFontSize(11);
+        pdf.text(`${index + 1}. ${word}`, 25, yPosition);
+        yPosition += 7;
+        if (yPosition > pageHeight - 20) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+      }
+    });
+
+    yPosition += 5;
+
+    // Right side - Definitions
+    pdf.setFontSize(12);
+    pdf.text('Definitions:', 20, yPosition);
+    yPosition += 8;
+
+    shuffledDefinitions.forEach((definition, index) => {
+      if (yPosition > pageHeight - 20) {
+        pdf.addPage();
+        yPosition = 20;
+      }
+      pdf.setFontSize(11);
+      const letterCode = String.fromCharCode(65 + index); // A, B, C, D...
+      const wrappedText = pdf.splitTextToSize(`${letterCode}. ${definition}`, 100);
+      pdf.text(wrappedText, 25, yPosition);
+      yPosition += wrappedText.length * 5 + 5;
+    });
+
+    pdf.save('matching-definitions-worksheet.pdf');
+    setGenerating(false);
+  };
+
+  // Generate PDF for Select Correct Spelling worksheet
+  const generateSpellingSelectWorksheet = () => {
+    setGenerating(true);
+    const pdf = new jsPDF();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    let yPosition = 20;
+
+    // Title
+    pdf.setFontSize(18);
+    pdf.text('Select Correct Spelling', pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 15;
+
+    pdf.setFontSize(11);
+    pdf.text('Name: ______________________     Date: ________________', 20, yPosition);
+    yPosition += 15;
+
+    // Instructions
+    pdf.setFontSize(10);
+    pdf.text('Circle the correct spelling of each word:', 20, yPosition);
+    yPosition += 10;
+
+    // Generate questions for each word
+    words.forEach((word, index) => {
+      if (word.trim()) {
+        if (yPosition > pageHeight - 20) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+
+        // Create misspelled versions
+        const misspellings = generateMisspellings(word);
+        const allOptions = [word, ...misspellings].sort(() => Math.random() - 0.5);
+
+        pdf.setFontSize(11);
+        pdf.text(`${index + 1}. ${allOptions.join('   /   ')}`, 20, yPosition);
+        yPosition += 10;
+      }
+    });
+
+    pdf.save('select-spelling-worksheet.pdf');
+    setGenerating(false);
+  };
+
+  // Helper function to generate common misspellings
+  const generateMisspellings = (word: string): string[] => {
+    const misspellings = [];
+    
+    // Common misspelling: swap two letters
+    if (word.length > 2) {
+      const randomIndex = Math.floor(Math.random() * (word.length - 1));
+      misspellings.push(
+        word.slice(0, randomIndex) +
+        word[randomIndex + 1] +
+        word[randomIndex] +
+        word.slice(randomIndex + 2)
+      );
+    }
+
+    // Common misspelling: double a letter
+    const randomIndex2 = Math.floor(Math.random() * word.length);
+    misspellings.push(
+      word.slice(0, randomIndex2) +
+      word[randomIndex2] +
+      word.slice(randomIndex2)
+    );
+
+    // Common misspelling: remove a letter
+    if (word.length > 2) {
+      const randomIndex3 = Math.floor(Math.random() * word.length);
+      misspellings.push(
+        word.slice(0, randomIndex3) +
+        word.slice(randomIndex3 + 1)
+      );
+    }
+
+    return misspellings;
+  };
+
   const handleGenerateWorksheets = async () => {
     if (selectedWorksheets.length === 0) {
       alert('Please select at least one worksheet type');
       return;
     }
-    // TODO: Implement worksheet generation and PDF download
-    alert('Worksheet generation coming soon!');
+
+    try {
+      if (selectedWorksheets.includes('definitions')) {
+        await generateDefinitionsWorksheet();
+      }
+      if (selectedWorksheets.includes('spelling-select')) {
+        generateSpellingSelectWorksheet();
+      }
+      alert('Worksheets generated and downloaded successfully!');
+    } catch (error) {
+      console.error('Error generating worksheets:', error);
+      alert('Error generating worksheets. Please try again.');
+    }
   };
 
   if (loading) {
@@ -148,10 +325,10 @@ export default function ReviewList() {
 
           <button
             onClick={handleGenerateWorksheets}
-            disabled={selectedWorksheets.length === 0}
+            disabled={selectedWorksheets.length === 0 || generating}
             className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 font-medium"
           >
-            Generate & Download PDFs
+            {generating ? 'Generating...' : 'Generate & Download PDFs'}
           </button>
         </div>
       </main>
