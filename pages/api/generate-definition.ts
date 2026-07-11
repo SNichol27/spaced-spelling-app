@@ -36,11 +36,11 @@ export default async function handler(
           {
             role: 'system',
             content:
-              'You are a helpful assistant that creates simple, child-friendly definitions for words. Keep definitions to 1-2 sentences, use simple language a 7-10 year old would understand, and make them engaging.',
+              'You are a helpful assistant that creates simple, child-friendly definitions for words. Keep definitions to 1-2 sentences, use simple language a 7-10 year old would understand, and make them engaging. IMPORTANT: Do NOT include the word being defined in the definition. For example, do not say "A dog is..." or "Red is..." - instead describe what it is or does without using the word itself.',
           },
           {
             role: 'user',
-            content: `Create a simple, child-friendly definition for the word "${word}". Keep it to 1-2 sentences.`,
+            content: `Create a simple, child-friendly definition for the word "${word}". Keep it to 1-2 sentences. Do NOT use the word "${word}" in the definition itself.`,
           },
         ],
         max_tokens: 100,
