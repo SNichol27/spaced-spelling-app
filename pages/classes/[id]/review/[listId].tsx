@@ -5,6 +5,108 @@ import { supabase } from '@/lib/supabase';
 import type { SpellingList } from '@/lib/types';
 import jsPDF from 'jspdf';
 
+// Simple child-friendly definitions database
+const childFriendlyDefinitions: { [key: string]: string } = {
+  'red': 'A bright color like a stop sign or an apple.',
+  'dog': 'A furry animal that barks and likes to play fetch.',
+  'cat': 'A furry animal with whiskers that says meow.',
+  'money': 'Paper or coins that you use to buy things.',
+  'happy': 'Feeling joy and smiling.',
+  'sad': 'Feeling unhappy or wanting to cry.',
+  'big': 'Very large or taking up a lot of space.',
+  'small': 'Tiny or not very big.',
+  'fast': 'Moving very quickly.',
+  'slow': 'Moving without rushing.',
+  'hot': 'Having a high temperature, like fire.',
+  'cold': 'Having a low temperature, like ice.',
+  'run': 'To move your legs quickly.',
+  'jump': 'To push your body up in the air.',
+  'walk': 'To move forward by putting one foot in front of the other.',
+  'eat': 'To put food in your mouth and chew it.',
+  'sleep': 'To rest with your eyes closed.',
+  'play': 'To have fun and do enjoyable activities.',
+  'read': 'To look at words and understand them.',
+  'write': 'To make letters and words on paper or a screen.',
+  'book': 'Pages with words and pictures that you read.',
+  'school': 'A place where children learn.',
+  'friend': 'Someone you like and enjoy spending time with.',
+  'family': 'Your parents, brothers, sisters, and relatives.',
+  'house': 'A building where people live.',
+  'tree': 'A tall plant with a brown trunk and green leaves.',
+  'flower': 'A colorful plant with soft petals.',
+  'sun': 'The bright star in the sky during the day.',
+  'moon': 'The bright object in the sky at night.',
+  'star': 'A tiny bright light in the night sky.',
+  'water': 'A clear liquid that you drink and swim in.',
+  'fire': 'Hot flames that give light and warmth.',
+  'rain': 'Water falling from the clouds.',
+  'snow': 'Cold white flakes that fall from the sky in winter.',
+  'wind': 'Moving air that you can feel.',
+  'apple': 'A round red or green fruit that is sweet.',
+  'banana': 'A yellow fruit that is soft inside.',
+  'orange': 'A round orange fruit that is juicy and sweet.',
+  'bird': 'An animal with feathers and wings that can fly.',
+  'fish': 'An animal that lives in water.',
+  'horse': 'A large animal with four legs that people can ride.',
+  'cow': 'A large farm animal that gives milk.',
+  'pig': 'A farm animal with a pink nose and curly tail.',
+  'chicken': 'A bird that lays eggs and goes cluck cluck.',
+  'teacher': 'A person who helps children learn in school.',
+  'doctor': 'A person who helps sick people feel better.',
+  'parent': 'A mother or father.',
+  'baby': 'A very young child.',
+  'color': 'Something like red, blue, yellow, or green.',
+  'number': 'A symbol like 1, 2, 3, or 10.',
+  'letter': 'A symbol used to make words, like A, B, or C.',
+  'word': 'A group of letters that means something.',
+  'picture': 'An image or drawing of something.',
+  'toy': 'Something fun to play with.',
+  'ball': 'A round object that you can bounce or throw.',
+  'car': 'A vehicle with four wheels that people drive.',
+  'bike': 'A two-wheeled vehicle that you ride.',
+  'door': 'An entrance to a room or building.',
+  'window': 'An opening to see outside.',
+  'table': 'Furniture where you eat or work.',
+  'chair': 'Furniture where you sit.',
+  'bed': 'Furniture where you sleep.',
+  'cup': 'A container for drinking.',
+  'plate': 'A flat dish for food.',
+  'spoon': 'An utensil for eating soup.',
+  'fork': 'An utensil with prongs for eating.',
+  'knife': 'A tool with a sharp blade for cutting.',
+  'hand': 'The part of your body at the end of your arm.',
+  'foot': 'The part of your body at the end of your leg.',
+  'head': 'The part of your body above your neck.',
+  'nose': 'The part of your face that smells.',
+  'eye': 'The part of your face that sees.',
+  'ear': 'The part of your head that hears.',
+  'mouth': 'The part of your face where you eat and talk.',
+  'tooth': 'A hard white thing in your mouth for chewing.',
+  'hair': 'The strands on top of your head.',
+  'skin': 'The outer covering of your body.',
+  'heart': 'The part inside your body that pumps blood.',
+  'brain': 'The part inside your head that thinks.',
+  'good': 'Nice or doing the right thing.',
+  'bad': 'Not nice or doing the wrong thing.',
+  'nice': 'Pleasant and kind.',
+  'mean': 'Unkind or hurtful.',
+  'brave': 'Not being afraid to do something hard.',
+  'shy': 'Being quiet and not wanting to talk to people.',
+  'smart': 'Able to learn things easily.',
+  'strong': 'Having a lot of power or muscles.',
+  'weak': 'Not having much strength.',
+  'loud': 'Making a lot of noise.',
+  'quiet': 'Not making much noise.',
+  'clean': 'Not dirty or messy.',
+  'dirty': 'Not clean or covered in dirt.',
+  'wet': 'Covered in water.',
+  'dry': 'Not wet.',
+  'new': 'Just made or never used before.',
+  'old': 'Not new or very aged.',
+  'heavy': 'Weighing a lot.',
+  'light': 'Not weighing much.',
+};
+
 export default function ReviewList() {
   const router = useRouter();
   const { id: classId, listId } = router.query;
@@ -53,40 +155,14 @@ export default function ReviewList() {
     }
   };
 
-  // Fetch child-friendly definition from Simple English Wiktionary
-  const fetchDefinition = async (word: string): Promise<string> => {
-    try {
-      // Try Simple English Wiktionary first (child-friendly)
-      const response = await fetch(
-        `https://simple.wiktionary.org/w/api.php?action=query&titles=${encodeURIComponent(word)}&prop=extracts&explaintext=true&format=json`
-      );
-      
-      if (response.ok) {
-        const data = await response.json();
-        const pages = data.query?.pages;
-        
-        if (pages) {
-          const pageId = Object.keys(pages)[0];
-          const page = pages[pageId];
-          
-          if (page.extract) {
-            // Clean up the extract and get first sentence
-            const text = page.extract.split('\n')[0];
-            if (text && text.length > 0) {
-              return text.substring(0, 150) + (text.length > 150 ? '...' : '');
-            }
-          }
-        }
-      }
-    } catch (error) {
-      console.error(`Error fetching definition for ${word}:`, error);
-    }
-    
-    return 'A word that means something specific.';
+  // Get child-friendly definition
+  const getDefinition = (word: string): string => {
+    const lowerWord = word.toLowerCase().trim();
+    return childFriendlyDefinitions[lowerWord] || `${word} is a word we use to describe or name something.`;
   };
 
   // Generate PDF for Match Words to Definitions worksheet
-  const generateDefinitionsWorksheet = async () => {
+  const generateDefinitionsWorksheet = () => {
     const pdf = new jsPDF();
     const pageHeight = pdf.internal.pageSize.getHeight();
     const pageWidth = pdf.internal.pageSize.getWidth();
@@ -101,14 +177,13 @@ export default function ReviewList() {
     pdf.text('Name: ______________________     Date: ________________', 20, yPosition);
     yPosition += 15;
 
-    // Fetch definitions for all words
+    // Get definitions for all words
     const definitions: { [key: string]: string } = {};
-    for (const word of words) {
+    words.forEach((word) => {
       if (word.trim()) {
-        const definition = await fetchDefinition(word);
-        definitions[word] = definition;
+        definitions[word] = getDefinition(word);
       }
-    }
+    });
 
     // Create shuffled list of definitions for matching
     const shuffledDefinitions = [...Object.values(definitions)].sort(() => Math.random() - 0.5);
@@ -142,11 +217,11 @@ export default function ReviewList() {
         pdf.addPage();
         yPosition = 20;
       }
-      pdf.setFontSize(10);
+      pdf.setFontSize(9);
       const letterCode = String.fromCharCode(65 + index); // A, B, C, D...
       const wrappedText = pdf.splitTextToSize(`${letterCode}. ${definition}`, 100);
       pdf.text(wrappedText, 25, yPosition);
-      yPosition += wrappedText.length * 4 + 5;
+      yPosition += wrappedText.length * 3.5 + 5;
     });
 
     pdf.save('matching-definitions-worksheet.pdf');
@@ -238,7 +313,7 @@ export default function ReviewList() {
     try {
       setGenerating(true);
       if (selectedWorksheets.includes('definitions')) {
-        await generateDefinitionsWorksheet();
+        generateDefinitionsWorksheet();
       }
       if (selectedWorksheets.includes('spelling-select')) {
         generateSpellingSelectWorksheet();
