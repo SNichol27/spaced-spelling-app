@@ -71,7 +71,6 @@ export default function ReviewList() {
 
   // Generate PDF for Match Words to Definitions worksheet
   const generateDefinitionsWorksheet = async () => {
-    setGenerating(true);
     const pdf = new jsPDF();
     const pageHeight = pdf.internal.pageSize.getHeight();
     const pageWidth = pdf.internal.pageSize.getWidth();
@@ -135,12 +134,10 @@ export default function ReviewList() {
     });
 
     pdf.save('matching-definitions-worksheet.pdf');
-    setGenerating(false);
   };
 
   // Generate PDF for Select Correct Spelling worksheet
   const generateSpellingSelectWorksheet = () => {
-    setGenerating(true);
     const pdf = new jsPDF();
     const pageHeight = pdf.internal.pageSize.getHeight();
     const pageWidth = pdf.internal.pageSize.getWidth();
@@ -179,7 +176,6 @@ export default function ReviewList() {
     });
 
     pdf.save('select-spelling-worksheet.pdf');
-    setGenerating(false);
   };
 
   // Helper function to generate common misspellings
@@ -224,6 +220,7 @@ export default function ReviewList() {
     }
 
     try {
+      setGenerating(true);
       if (selectedWorksheets.includes('definitions')) {
         await generateDefinitionsWorksheet();
       }
@@ -231,9 +228,11 @@ export default function ReviewList() {
         generateSpellingSelectWorksheet();
       }
       alert('Worksheets generated and downloaded successfully!');
+      setGenerating(false);
     } catch (error) {
       console.error('Error generating worksheets:', error);
       alert('Error generating worksheets. Please try again.');
+      setGenerating(false);
     }
   };
 
