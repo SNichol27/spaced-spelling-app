@@ -36,15 +36,15 @@ export default async function handler(
           {
             role: 'system',
             content:
-              'You are a helpful assistant that creates simple, child-friendly definitions for words. Keep definitions to 1-2 sentences, use simple language a 7-10 year old would understand, and make them engaging. IMPORTANT: Do NOT include the word being defined in the definition. For example, do not say "A dog is..." or "Red is..." - instead describe what it is or does without using the word itself.',
+              'You are a helpful assistant that creates very simple, short definitions for 8-year-olds. Write ONLY one short sentence (max 10 words). Use very simple words. NEVER include the word being defined anywhere in the definition. Do not add any explanation or extra text, just the definition.',
           },
           {
             role: 'user',
-            content: `Create a simple, child-friendly definition for the word "${word}". Keep it to 1-2 sentences. Do NOT use the word "${word}" in the definition itself.`,
+            content: `Write a one-sentence definition (max 10 words) for "${word}" for an 8-year-old. NEVER use the word "${word}" in the definition. Just write the definition, nothing else.`,
           },
         ],
-        max_tokens: 100,
-        temperature: 0.7,
+        max_tokens: 30,
+        temperature: 0.5,
       }),
     });
 
@@ -55,10 +55,13 @@ export default async function handler(
     }
 
     const data = await response.json();
-    const definition =
+    let definition =
       data.choices?.[0]?.message?.content || 'Unable to generate definition';
 
-    res.status(200).json({ definition: definition.trim() });
+    // Clean up the definition - remove quotes if present
+    definition = definition.replace(/^["']|["']$/g, '').trim();
+
+    res.status(200).json({ definition });
   } catch (error) {
     console.error('Error calling OpenAI API:', error);
     res.status(500).json({ error: 'Internal server error' });
