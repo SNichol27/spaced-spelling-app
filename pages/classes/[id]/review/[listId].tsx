@@ -196,13 +196,13 @@ export default function ReviewList() {
 
     // Instructions
     pdf.setFontSize(10);
-    pdf.text('Circle the correct spelling of each word:', 20, yPosition);
+    pdf.text('Circle the correct spelling and write it on the line:', 20, yPosition);
     yPosition += 10;
 
     // Generate questions for each word
     words.forEach((word, index) => {
       if (word.trim()) {
-        if (yPosition > pageHeight - 20) {
+        if (yPosition > pageHeight - 15) {
           pdf.addPage();
           yPosition = 20;
         }
@@ -220,6 +220,11 @@ export default function ReviewList() {
         pdf.text(wrappedOptions, 25, yPosition + 5);
         
         yPosition += wrappedOptions.length * 5 + 8;
+
+        // Add line for writing the correct spelling
+        pdf.setFontSize(10);
+        pdf.text('Write the correct spelling: _______________________________', 20, yPosition);
+        yPosition += 10;
       }
     });
 
