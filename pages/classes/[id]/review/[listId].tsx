@@ -53,20 +53,36 @@ export default function ReviewList() {
     }
   };
 
-  // Fetch definition from Free Dictionary API
+  // Fetch child-friendly definition from Simple English Wiktionary
   const fetchDefinition = async (word: string): Promise<string> => {
     try {
-      const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word.toLowerCase()}`);
+      // Try Simple English Wiktionary first (child-friendly)
+      const response = await fetch(
+        `https://simple.wiktionary.org/w/api.php?action=query&titles=${encodeURIComponent(word)}&prop=extracts&explaintext=true&format=json`
+      );
+      
       if (response.ok) {
         const data = await response.json();
-        if (data[0] && data[0].meanings && data[0].meanings[0] && data[0].meanings[0].definitions) {
-          return data[0].meanings[0].definitions[0].definition;
+        const pages = data.query?.pages;
+        
+        if (pages) {
+          const pageId = Object.keys(pages)[0];
+          const page = pages[pageId];
+          
+          if (page.extract) {
+            // Clean up the extract and get first sentence
+            const text = page.extract.split('\n')[0];
+            if (text && text.length > 0) {
+              return text.substring(0, 150) + (text.length > 150 ? '...' : '');
+            }
+          }
         }
       }
     } catch (error) {
       console.error(`Error fetching definition for ${word}:`, error);
     }
-    return 'Definition not available';
+    
+    return 'A word that means something specific.';
   };
 
   // Generate PDF for Match Words to Definitions worksheet
@@ -126,11 +142,11 @@ export default function ReviewList() {
         pdf.addPage();
         yPosition = 20;
       }
-      pdf.setFontSize(11);
+      pdf.setFontSize(10);
       const letterCode = String.fromCharCode(65 + index); // A, B, C, D...
       const wrappedText = pdf.splitTextToSize(`${letterCode}. ${definition}`, 100);
       pdf.text(wrappedText, 25, yPosition);
-      yPosition += wrappedText.length * 5 + 5;
+      yPosition += wrappedText.length * 4 + 5;
     });
 
     pdf.save('matching-definitions-worksheet.pdf');
