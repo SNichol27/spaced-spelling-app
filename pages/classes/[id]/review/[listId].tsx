@@ -283,16 +283,16 @@ export default function ReviewList() {
       }
     }
 
-    // Common phonetic patterns (silent letters, doubled letters, etc.)
-    const _phoneticPatterns: { [key: string]: string[] } = {
-      // Silent letters
-      'night': ['nite', 'nght'],
-      'write': ['rite', 'writ'],
-      'know': ['no', 'noe'],
-      // Doubled consonants
-      'double': 'dubble',
-      'letter': 'leter',
-    };
+    /*
+// Common phonetic patterns (silent letters, doubled letters, etc.)
+const phoneticPatterns: { [key: string]: string[] } = {
+  'night': ['nite', 'nght'],
+  'write': ['rite', 'writ'],
+  'know': ['no', 'noe'],
+  'double': ['dubble'],
+  'letter': ['leter'],
+};
+*/ 
 
     // Silent letter handling
     if (lowerWord.includes('gh')) {
