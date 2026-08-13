@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import type { Class, SpellingList } from '@/lib/types';
+import type { Class } from '@/lib/types';
 
 interface ReviewItem {
   spelling_list_id: string;
