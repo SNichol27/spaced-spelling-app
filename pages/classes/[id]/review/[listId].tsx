@@ -284,7 +284,7 @@ export default function ReviewList() {
     }
 
     // Common phonetic patterns (silent letters, doubled letters, etc.)
-    const _phoneticPatter*s: { [key: string]: string[] } = {*
+    const _phoneticPatterns: { [key: string]: string[] } = {
       // Silent letters
       'night': ['nite', 'nght'],
       'write': ['rite', 'writ'],
