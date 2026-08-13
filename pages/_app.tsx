@@ -25,7 +25,7 @@ export default function App({ Component, pageProps }: AppProps) {
 
     checkUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       if (session?.user) {
         setUser({
           id: session.user.id,
