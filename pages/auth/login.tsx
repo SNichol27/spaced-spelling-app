@@ -77,7 +77,6 @@ export default function Login() {
   Don't have an account?{' '}
   /auth/signup
     Sign Up
-  </Link>
 </p>
 
 </div>
