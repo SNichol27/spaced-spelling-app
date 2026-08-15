@@ -15,12 +15,17 @@ export default function Login() {
     setLoading(true);
     setError('');
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
     if (error) {
       setError(error.message);
     } else {
       router.push('/dashboard');
     }
+
     setLoading(false);
   };
 
@@ -31,12 +36,17 @@ export default function Login() {
           <h1 className="text-center text-4xl font-bold text-gray-900 mb-6">
             Spaced Spelling
           </h1>
-          <h2 className="text-center text-2xl font-bold text-gray-900">Sign In</h2>
+          <h2 className="text-center text-2xl font-bold text-gray-900">
+            Sign In
+          </h2>
         </div>
 
         <form onSubmit={handleLogin} className="mt-8 space-y-6">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700"
+            >
               Email
             </label>
             <input
@@ -50,7 +60,10 @@ export default function Login() {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700"
+            >
               Password
             </label>
             <input
@@ -63,7 +76,11 @@ export default function Login() {
             />
           </div>
 
-          {error && <div className="text-red-600 text-sm">{error}</div>}
+          {error && (
+            <div className="text-red-600 text-sm">
+              {error}
+            </div>
+          )}
 
           <button
             type="submit"
@@ -75,21 +92,18 @@ export default function Login() {
         </form>
 
         <p className="text-center text-sm text-gray-600">
-  Don't have an account?{' '}
-  /auth/signup
-    Sign Up
-  </Link>
-</p>
+          Don't have an account?{' '}
+          /auth/signup
+            Sign Up
+          </Link>
+        </p>
 
-<p className="text-center text-sm mt-2">
-  <Link
-    href="/auth/reset-got Password?
-  </Link>
-</p>
-
-
-
-</div>
-</div>
-);
+        <p className="text-center text-sm mt-2">
+          /auth/reset-password
+            Forgot Password?
+          </Link>
+        </p>
+      </div>
+    </div>
+  );
 }
