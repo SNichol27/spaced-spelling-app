@@ -74,18 +74,19 @@ export default function Login() {
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-600">
+        <<p className="text-center text-sm text-gray-600">
   Don't have an account?{' '}
-  /auth/signup
-    Sign Up
-  </Link>
+  <Link
+    href="/auth/signup"
+    
 </p>
 
 <p className="text-center text-sm mt-2">
   <Link
-    href="/auth/reset-password"
-    classink>
+    href="/auth/   Forgot Password?
+  </Link>
 </p>
+
 
 </div>
 </div>
