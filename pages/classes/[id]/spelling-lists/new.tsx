@@ -11,6 +11,7 @@ export default function NewSpellingList() {
   const [classData, setClassData] = useState<Class | null>(null);
   const [words, setWords] = useState('');
   const [week, setWeek] = useState(1);
+  const [scheduleType, setScheduleType] = useState('expanding');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [fetchingClass, setFetchingClass] = useState(true);
