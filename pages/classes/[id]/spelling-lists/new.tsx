@@ -77,7 +77,10 @@ export default function NewSpellingList() {
     }
 
     // Create review schedule entries
-    const reviewWeeks = calculateReviewWeeks(week);
+    const reviewWeeks = calculateReviewWeeks(
+  week,
+  scheduleType
+); 
     const reviewEntries = reviewWeeks
       .filter((w) => w <= classData.weeks)
       .map((reviewWeek) => ({
