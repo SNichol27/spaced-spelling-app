@@ -144,9 +144,3 @@ export default function ReviewSchedule() {
     </div>
   );
 }
-
-        )}
-      </main>
-    </div>
-  );
-}
