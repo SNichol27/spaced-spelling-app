@@ -154,6 +154,25 @@ export default function NewSpellingList() {
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
+          <div>
+  <label className="block text-sm font-medium text-gray-700">
+    Review Schedule
+  </label>
+
+  <select
+    value={scheduleType}
+    onChange={(e) => setScheduleType(e.target.value)}
+    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+  >
+    <option value="expanding">
+      1 week, 4 weeks, 9 weeks, then every 9 weeks
+    </option>
+
+    <option value="fixed8">
+      Every 8 weeks
+    </option>
+  </select>
+</div>
 
           {error && <div className="text-red-600 text-sm">{error}</div>}
 
