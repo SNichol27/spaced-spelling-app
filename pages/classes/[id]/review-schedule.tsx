@@ -42,7 +42,7 @@ export default function ReviewSchedule() {
     // Fetch review schedule with spelling lists
     const { data: scheduleData, error: scheduleErr } = await supabase
       .from('review_schedules')
-      .select('spelling_list_id, review_week, status, spelling_lists(words)')
+      .select('spelling_list_id, review_week, status, spelling_lists!inner (class_id, words)')
       .eq('spelling_lists.class_id', classId);
 
     if (!scheduleErr && scheduleData) {
@@ -139,6 +139,12 @@ export default function ReviewSchedule() {
               </div>
             ))}
           </div>
+        )}
+      </main>
+    </div>
+  );
+}
+
         )}
       </main>
     </div>
